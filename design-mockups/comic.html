@@ -1,0 +1,477 @@
+<title>Who Wins Comic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Archivo:wdth,wght@75..100,400..900&family=Patrick+Hand+SC&display=swap">
+<style>
+/* Layout: a comic issue. Cover with the matchup, a fight told in panels, then the letters page for disputes. */
+:root {
+  --paper: #f2e8c9;      /* newsprint */
+  --panel: #fffaf0;
+  --ink: #16131c;
+  --line: #16131c;
+  --muted: #5e5648;
+  --red: #e0332a;
+  --cyan: #139fd3;
+  --yellow: #ffd23f;
+  --cap: #ffd23f;        /* caption boxes stay yellow in both themes */
+  --cap-ink: #16131c;
+  --dot: rgba(22, 19, 28, .13);
+  --f-display: "Bangers", "Impact", "Arial Black", sans-serif;
+  --f-letter: "Patrick Hand SC", "Comic Sans MS", "Chalkboard SE", cursive;
+  --f-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #14141d; --panel: #1e1e2b; --ink: #f1ead8; --line: #f1ead8; --muted: #aaa3b6;
+    --red: #ff5446; --cyan: #3cc3f0; --dot: rgba(241, 234, 216, .07); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #14141d; --panel: #1e1e2b; --ink: #f1ead8; --line: #f1ead8; --muted: #aaa3b6;
+  --red: #ff5446; --cyan: #3cc3f0; --dot: rgba(241, 234, 216, .07); color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper);
+  background-image: radial-gradient(var(--dot) 1.1px, transparent 1.5px);
+  background-size: 7px 7px;
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.5;
+  padding-inline: 16px;
+  padding-block: 0 64px;
+}
+.wrap { max-width: 1120px; margin-inline: auto; display: grid; gap: 40px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+
+/* ---------- masthead ---------- */
+.mast {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding-block: 18px; border-bottom: 3px solid var(--line);
+}
+.logo {
+  font-family: var(--f-display); font-size: 40px; line-height: 1; letter-spacing: 1px;
+  color: var(--yellow); -webkit-text-stroke: 2px var(--cap-ink); paint-order: stroke fill;
+  text-shadow: 4px 4px 0 var(--red); transform: rotate(-3deg); display: inline-block;
+}
+.mast nav { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.mast nav a { color: var(--ink); text-decoration: none; font-weight: 700; font-size: 14px; padding: 6px 10px; border-radius: 2px; }
+.mast nav a:hover { background: var(--yellow); color: var(--cap-ink); }
+.coins { display: inline-flex; gap: 6px; align-items: center; border: 2px solid var(--line); padding: 4px 10px; font-weight: 800; font-size: 14px; background: var(--panel); }
+.coins i { width: 14px; height: 14px; border-radius: 50%; background: var(--yellow); border: 2px solid var(--cap-ink); display: inline-block; }
+.theme {
+  width: 40px; height: 40px; border: 2px solid var(--line); background: var(--panel); display: grid; place-items: center;
+  box-shadow: 3px 3px 0 var(--line); transition: transform .12s, box-shadow .12s;
+}
+.theme:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--line); }
+.theme svg { width: 20px; height: 20px; }
+.theme[data-mode="dark"] .sun, .theme[data-mode="light"] .moon { display: none; }
+
+/* ---------- cover / picker ---------- */
+.cover {
+  position: relative; border: 4px solid var(--line); background: var(--panel);
+  box-shadow: 8px 8px 0 var(--line); overflow: hidden;
+}
+.cover-top { display: flex; justify-content: space-between; align-items: stretch; border-bottom: 4px solid var(--line); }
+.issue { padding: 8px 14px; font-family: var(--f-letter); font-size: 15px; display: flex; gap: 14px; align-items: center; }
+.issue b { font-family: var(--f-display); font-size: 22px; font-weight: 400; color: var(--red); letter-spacing: 1px; }
+.price { background: var(--red); color: #fff; font-family: var(--f-display); font-size: 20px; padding: 8px 16px; letter-spacing: 1px; display: flex; align-items: center; }
+
+.arena-art { position: relative; display: grid; grid-template-columns: 1fr 1fr; min-height: 360px; }
+.side { position: relative; display: grid; align-content: end; justify-items: center; padding: 24px 16px 0; overflow: hidden; }
+.side.a { background: linear-gradient(160deg, #1b6fa8, #0b3a63); }
+.side.b { background: linear-gradient(200deg, #e2631b, #7a1f12); }
+.side::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.18) 1.4px, transparent 1.8px); background-size: 9px 9px; }
+.side .fig { position: relative; width: min(240px, 80%); height: auto; filter: drop-shadow(5px 6px 0 rgba(0,0,0,.45)); animation: bob 3.2s ease-in-out infinite; }
+.side.b .fig { animation-delay: -1.6s; }
+@keyframes bob { 50% { transform: translateY(-6px); } }
+.side .tag {
+  position: absolute; top: 16px; font-family: var(--f-display); font-size: clamp(28px, 4.5vw, 48px); line-height: .95;
+  color: #fff; -webkit-text-stroke: 2px #16131c; paint-order: stroke fill; text-shadow: 3px 3px 0 #16131c; letter-spacing: 1px;
+}
+.side.a .tag { left: 18px; transform: rotate(-4deg); }
+.side.b .tag { right: 18px; text-align: right; transform: rotate(3deg); }
+.vs-burst {
+  position: absolute; left: 50%; top: 46%; translate: -50% -50%; width: 150px; height: 150px; display: grid; place-items: center; z-index: 2;
+  animation: wobble 2.4s ease-in-out infinite;
+}
+.vs-burst svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.vs-burst span { position: relative; font-family: var(--f-display); font-size: 58px; color: var(--red); -webkit-text-stroke: 2px #16131c; paint-order: stroke fill; transform: rotate(-8deg); }
+@keyframes wobble { 50% { transform: rotate(6deg) scale(1.06); } }
+
+.picker { display: grid; gap: 18px; padding: 20px; border-top: 4px solid var(--line); }
+.pick-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: start; }
+.pick-row .mid { font-family: var(--f-display); font-size: 30px; align-self: center; color: var(--red); }
+.field { display: grid; gap: 8px; position: relative; min-width: 0; }
+.field label, .group-label { font-family: var(--f-letter); font-size: 15px; color: var(--muted); }
+.field input, .field select {
+  width: 100%; font: 700 17px var(--f-body); color: var(--ink); background: var(--paper);
+  border: 3px solid var(--line); padding: 10px 12px; border-radius: 0; appearance: none;
+}
+.field select { font-weight: 500; font-size: 15px; background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%); background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 32px; }
+.sugg { position: absolute; top: 74px; left: 0; right: 0; z-index: 10; list-style: none; margin: 0; padding: 0; background: var(--panel); border: 3px solid var(--line); box-shadow: 5px 5px 0 var(--line); }
+.sugg li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 12px; cursor: pointer; }
+.sugg li[aria-selected="true"] { background: var(--yellow); color: var(--cap-ink); }
+.s-name { font-weight: 800; }
+.s-from { font-size: 13px; opacity: .75; text-align: right; }
+
+.opts { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: end; }
+.group { display: grid; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  border: 2px solid var(--line); background: var(--panel); padding: 7px 14px; font-weight: 700; font-size: 14px;
+  box-shadow: 3px 3px 0 var(--line); transition: transform .1s, box-shadow .1s;
+}
+.chip[aria-pressed="true"] { background: var(--cyan); color: #fff; }
+.chip:active { transform: translate(3px, 3px); box-shadow: none; }
+.fight-btn {
+  margin-left: auto; font-family: var(--f-display); font-size: 34px; letter-spacing: 2px; padding: 6px 30px;
+  background: var(--red); color: #fff; border: 3px solid var(--line); box-shadow: 6px 6px 0 var(--line);
+  -webkit-text-stroke: 1.5px #16131c; paint-order: stroke fill; transition: transform .1s, box-shadow .1s;
+}
+.fight-btn:hover { transform: translate(-2px, -2px) rotate(-1deg); box-shadow: 8px 8px 0 var(--line); }
+.fight-btn:active { transform: translate(6px, 6px); box-shadow: none; }
+
+/* ---------- verdict ---------- */
+.verdict { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; align-items: start; }
+.verdict-box {
+  background: var(--cap); color: var(--cap-ink); border: 4px solid var(--line); box-shadow: 8px 8px 0 var(--line);
+  padding: 22px 24px; display: grid; gap: 10px; transform: rotate(-1deg);
+}
+.kicker { font-family: var(--f-letter); font-size: 17px; }
+.winner { font-family: var(--f-display); font-size: clamp(44px, 7vw, 76px); line-height: .9; letter-spacing: 1px; color: var(--red); -webkit-text-stroke: 2px #16131c; paint-order: stroke fill; }
+.verdict-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { border: 2px solid #16131c; background: #fffaf0; color: #16131c; padding: 3px 10px; font-weight: 700; font-size: 14px; }
+.conf { height: 16px; border: 2px solid #16131c; background: #fffaf0; position: relative; }
+.conf i { position: absolute; inset: 0 auto 0 0; background: var(--red); transition: width .6s cubic-bezier(.2,.9,.3,1.2); background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,.25) 0 6px, transparent 6px 12px); }
+.arena-note { font-size: 15px; margin: 0; }
+
+.tape { border: 3px solid var(--line); background: var(--panel); padding: 16px 18px; display: grid; gap: 10px; }
+.tape h3 { font-family: var(--f-display); font-size: 26px; font-weight: 400; letter-spacing: 1px; }
+.tape-row { display: grid; grid-template-columns: 1fr 92px 1fr; gap: 10px; align-items: center; font-size: 14px; }
+.tape-row .lbl { text-align: center; font-family: var(--f-letter); font-size: 15px; }
+.bar { height: 14px; border: 2px solid var(--line); position: relative; background: var(--paper); }
+.bar i { position: absolute; top: 0; bottom: 0; }
+.bar.l i { right: 0; background: var(--cyan); }
+.bar.r i { left: 0; background: var(--red); }
+.bar i { background-image: radial-gradient(rgba(0,0,0,.25) 1px, transparent 1.4px) !important; background-size: 4px 4px !important; }
+.bar.l i { background-color: var(--cyan); }
+.bar.r i { background-color: var(--red); }
+.tape-head { display: grid; grid-template-columns: 1fr 1fr; font-weight: 800; font-size: 14px; }
+.tape-head span:last-child { text-align: right; }
+
+/* ---------- panels ---------- */
+.section-title { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.section-title h2 { font-family: var(--f-display); font-weight: 400; font-size: 40px; letter-spacing: 1px; }
+.section-title p { margin: 0; color: var(--muted); font-family: var(--f-letter); font-size: 17px; }
+.pages { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+.panel {
+  position: relative; border: 4px solid var(--line); background: var(--panel); overflow: hidden; min-height: 260px;
+  display: grid; grid-template-rows: auto 1fr; animation: pop .45s cubic-bezier(.2,.9,.3,1.3) both;
+}
+.panel:nth-child(1) { grid-column: span 4; }
+.panel:nth-child(2) { grid-column: span 2; }
+.panel:nth-child(3) { grid-column: span 2; }
+.panel:nth-child(4) { grid-column: span 4; }
+.panel:nth-child(5) { grid-column: span 3; }
+.panel:nth-child(6) { grid-column: span 3; }
+.panel.final { background: var(--red); color: #fff; }
+@keyframes pop { from { transform: scale(.94) rotate(-1deg); } }
+.panel .cap { background: var(--cap); color: var(--cap-ink); border-bottom: 3px solid var(--line); padding: 8px 12px; font-family: var(--f-letter); font-size: 16px; line-height: 1.3; }
+.panel .cap b { font-family: var(--f-display); font-weight: 400; font-size: 20px; letter-spacing: 1px; margin-right: 6px; color: var(--red); }
+.scene { position: relative; display: flex; align-items: end; justify-content: center; gap: 4px; padding: 10px 10px 0; min-height: 180px; }
+.scene.sea { background: linear-gradient(#bfe6f7, #3c9bd0); }
+.scene.dune { background: linear-gradient(#ffe2a6, #e8a24a); }
+.scene.roof { background: linear-gradient(#2b2f4d, #121426); }
+.scene .fig { width: 120px; max-width: 45%; height: auto; }
+.panel:nth-child(1) .scene .fig, .panel:nth-child(4) .scene .fig { width: 150px; }
+.sfx {
+  position: absolute; top: 12px; font-family: var(--f-display); font-size: clamp(30px, 4vw, 46px); color: var(--yellow);
+  -webkit-text-stroke: 2px #16131c; paint-order: stroke fill; text-shadow: 4px 4px 0 #16131c; transform: rotate(-8deg); letter-spacing: 2px; z-index: 2;
+}
+.sfx.right { right: 14px; transform: rotate(7deg); }
+.sfx.left { left: 14px; }
+.final-body { display: grid; align-content: center; gap: 10px; padding: 18px 20px; }
+.final-body .big { font-family: var(--f-display); font-size: 44px; line-height: 1; letter-spacing: 1px; -webkit-text-stroke: 1.5px #16131c; paint-order: stroke fill; color: var(--yellow); }
+.final-body p { margin: 0; font-family: var(--f-letter); font-size: 19px; line-height: 1.35; }
+
+/* ---------- letters ---------- */
+.letters { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; align-items: start; }
+.letters-col { border: 3px solid var(--line); background: var(--panel); padding: 20px; display: grid; gap: 18px; }
+.letters-col h2 { font-family: var(--f-display); font-weight: 400; font-size: 34px; letter-spacing: 1px; border-bottom: 3px double var(--line); padding-bottom: 6px; }
+.vote-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.vote { border: 3px solid var(--line); padding: 8px 16px; font-weight: 800; background: var(--paper); box-shadow: 3px 3px 0 var(--line); display: inline-flex; gap: 8px; align-items: center; }
+.vote[aria-pressed="true"].yes { background: var(--cyan); color: #fff; }
+.vote[aria-pressed="true"].no { background: var(--red); color: #fff; }
+.vote small { font-weight: 600; opacity: .8; font-variant-numeric: tabular-nums; }
+.letter { display: grid; grid-template-columns: 56px 1fr; gap: 14px; border-top: 2px dashed var(--muted); padding-top: 16px; }
+.letter:first-of-type { border-top: 0; padding-top: 0; }
+.up { border: 2px solid var(--line); background: var(--paper); display: grid; justify-items: center; padding: 6px 0; font-weight: 800; font-variant-numeric: tabular-nums; font-size: 14px; height: fit-content; }
+.up svg { width: 16px; height: 16px; }
+.up[aria-pressed="true"] { background: var(--yellow); color: var(--cap-ink); }
+.letter q { font-family: var(--f-letter); font-size: 18px; line-height: 1.35; quotes: "\201C" "\201D"; }
+.status { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.reply { margin-top: 10px; border-left: 4px solid var(--red); padding: 6px 12px; font-size: 14px; background: var(--paper); }
+.reply b { color: var(--red); }
+.add-arg { display: flex; gap: 8px; }
+.add-arg input { flex: 1; min-width: 0; font: 500 15px var(--f-body); color: var(--ink); border: 3px solid var(--line); background: var(--paper); padding: 10px 12px; }
+.add-arg button { border: 3px solid var(--line); background: var(--ink); color: var(--paper); font-weight: 800; padding: 0 16px; }
+.side-col { display: grid; gap: 20px; }
+.history { border: 3px solid var(--line); background: var(--panel); padding: 18px; display: grid; gap: 12px; }
+.history h3 { font-family: var(--f-display); font-weight: 400; font-size: 26px; letter-spacing: 1px; }
+.hist { display: grid; grid-template-columns: 40px 1fr; gap: 10px; font-size: 14px; }
+.hist b { font-family: var(--f-display); font-weight: 400; font-size: 22px; color: var(--red); line-height: 1; }
+.hist span { color: var(--muted); font-size: 12px; display: block; }
+.animate {
+  border: 4px solid var(--line); background: #16131c; color: #f1ead8; padding: 18px; display: grid; gap: 10px; position: relative; overflow: hidden;
+}
+.animate h3 { font-family: var(--f-display); font-weight: 400; font-size: 28px; letter-spacing: 1px; color: var(--yellow); }
+.animate p { margin: 0; font-size: 14px; color: #c9c2d6; }
+.animate button { justify-self: start; border: 2px solid #f1ead8; background: transparent; color: #f1ead8; padding: 8px 14px; font-weight: 800; opacity: .7; cursor: not-allowed; }
+.soon { position: absolute; top: 14px; right: -34px; background: var(--red); color: #fff; font-weight: 800; font-size: 11px; letter-spacing: .1em; padding: 4px 40px; transform: rotate(35deg); }
+.sources { font-size: 13px; color: var(--muted); border-top: 3px solid var(--line); padding-top: 14px; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); translate: -50% 0; background: var(--ink); color: var(--paper);
+  padding: 10px 16px; font-weight: 700; font-size: 14px; border: 3px solid var(--line); max-width: calc(100% - 32px); z-index: 20;
+}
+
+@media (max-width: 860px) {
+  .verdict, .letters { grid-template-columns: 1fr; }
+  .pages { grid-template-columns: 1fr 1fr; }
+  .panel:nth-child(n) { grid-column: span 1; }
+  .panel:nth-child(1), .panel.final { grid-column: span 2; }
+}
+@media (max-width: 560px) {
+  .pick-row { grid-template-columns: 1fr; }
+  .pick-row .mid { justify-self: center; }
+  .arena-art { min-height: 260px; }
+  .vs-burst { width: 104px; height: 104px; }
+  .vs-burst span { font-size: 40px; }
+  .pages { grid-template-columns: 1fr; }
+  .panel:nth-child(n) { grid-column: span 1; }
+  .fight-btn { margin-left: 0; width: 100%; }
+  .mast nav a.hide-sm { display: none; }
+  .issue span.hide-sm { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <span class="logo">WHO WINS?!</span>
+    <nav aria-label="Main">
+      <a href="#" class="hide-sm">Browse</a>
+      <a href="#" class="hide-sm">Hot matchups</a>
+      <span class="coins" title="Coins"><i></i>12</span>
+      <button class="theme" id="theme" type="button">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
+      </button>
+    </nav>
+  </header>
+
+  <section class="cover" aria-label="Pick a matchup">
+    <div class="cover-top">
+      <div class="issue"><b>No. 4,182</b><span class="hide-sm">October 2026</span><span>Sample matchup</span></div>
+      <div class="price">FREE</div>
+    </div>
+    <div class="arena-art">
+      <div class="side a"><span class="tag" id="tagA">PERCY<br>JACKSON</span><div id="figA"></div></div>
+      <div class="side b"><span class="tag" id="tagB">AELIN<br>GALATHYNIUS</span><div id="figB"></div></div>
+      <div class="vs-burst" aria-hidden="true">
+        <svg viewBox="0 0 100 100"><polygon points="50,2 60,30 90,14 72,42 98,52 70,60 84,90 56,72 46,98 40,70 10,86 28,58 2,46 30,38 14,10 42,28" fill="#ffd23f" stroke="#16131c" stroke-width="3" stroke-linejoin="round"/></svg>
+        <span>VS</span>
+      </div>
+    </div>
+    <div class="picker">
+      <div class="pick-row">
+        <div class="field">
+          <label for="inA">Fighter one</label>
+          <input id="inA" value="Percy Jackson" autocomplete="off">
+          <ul class="sugg" id="sgA" role="listbox" hidden></ul>
+          <select id="verA" aria-label="Percy Jackson version"></select>
+        </div>
+        <span class="mid" aria-hidden="true">VS</span>
+        <div class="field">
+          <label for="inB">Fighter two</label>
+          <input id="inB" value="Aelin Galathynius" autocomplete="off">
+          <ul class="sugg" id="sgB" role="listbox" hidden></ul>
+          <select id="verB" aria-label="Aelin Galathynius version"></select>
+        </div>
+      </div>
+      <div class="opts">
+        <div class="group">
+          <span class="group-label">Where do they fight?</span>
+          <div class="chips" id="arenas"></div>
+        </div>
+        <div class="group">
+          <span class="group-label">How do they fight?</span>
+          <div class="chips" id="modes">
+            <button class="chip" type="button" data-mode="character" aria-pressed="true">In character</button>
+            <button class="chip" type="button" data-mode="bloodlust" aria-pressed="false">Bloodlusted</button>
+          </div>
+        </div>
+        <button class="fight-btn" id="fight" type="button">FIGHT!</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="verdict" id="verdict" aria-live="polite"></section>
+
+  <section>
+    <div class="section-title"><h2>How it went down</h2><p id="beatCount"></p></div>
+    <div class="pages" id="pages"></div>
+  </section>
+
+  <section class="letters">
+    <div class="letters-col">
+      <h2>Letters page</h2>
+      <div class="vote-row">
+        <button class="vote yes" id="agree" type="button" aria-pressed="false">I agree <small id="agreeN"></small></button>
+        <button class="vote no" id="disagree" type="button" aria-pressed="false">I disagree <small id="disagreeN"></small></button>
+      </div>
+      <div id="args"></div>
+      <form class="add-arg" id="addArg">
+        <input id="argText" placeholder="What did the verdict miss? Name the feat." aria-label="Your argument">
+        <button type="submit">Send</button>
+      </form>
+    </div>
+    <div class="side-col">
+      <div class="history">
+        <h3>Verdict history</h3>
+        <div id="hist"></div>
+      </div>
+      <div class="animate">
+        <span class="soon">LATER</span>
+        <h3>Watch it happen</h3>
+        <p>Turn these panels into a 30-second animated fight with faceless 3D figures. Costs 3 coins.</p>
+        <button type="button" disabled>Animate this fight</button>
+      </div>
+    </div>
+  </section>
+
+  <p class="sources">Profiles built from the Riordan Wiki and the Throne of Glass Wiki (CC BY-SA). This is a design mockup with sample data. Only Percy vs Aelin is wired up.</p>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="shared.js" charset="utf-8"></script>
+<script>
+const { DATA, fig, setupTheme, setupSearch } = window.VS;
+const F = DATA.fighters;
+const $ = (id) => document.getElementById(id);
+let arena = 'ocean', mode = 'character';
+
+setupTheme($('theme'));
+$('figA').innerHTML = fig('a');
+$('figB').innerHTML = fig('b');
+$('verA').innerHTML = F.a.versions.map(v => `<option>${v}</option>`).join('');
+$('verB').innerHTML = F.b.versions.map(v => `<option>${v}</option>`).join('');
+
+let toastT;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+const onPick = (name) => { if (name !== F.a.name && name !== F.b.name) toast(`${name} is in the search, but only Percy vs Aelin is wired up in this mockup.`); };
+setupSearch($('inA'), $('sgA'), onPick);
+setupSearch($('inB'), $('sgB'), onPick);
+
+$('arenas').innerHTML = Object.entries(DATA.arenas).map(([k, a]) =>
+  `<button class="chip" type="button" data-arena="${k}" aria-pressed="${k === arena}">${a.label}</button>`).join('');
+$('arenas').addEventListener('click', (e) => { const b = e.target.closest('[data-arena]'); if (!b) return; arena = b.dataset.arena; syncChips(); render(); });
+$('modes').addEventListener('click', (e) => { const b = e.target.closest('[data-mode]'); if (!b) return; mode = b.dataset.mode; syncChips(); render(); });
+$('fight').addEventListener('click', () => { render(); $('verdict').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+function syncChips() {
+  document.querySelectorAll('[data-arena]').forEach(b => b.setAttribute('aria-pressed', b.dataset.arena === arena));
+  document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === mode));
+}
+
+const sceneClass = { ocean: 'sea', desert: 'dune', city: 'roof' };
+
+function render() {
+  const A = DATA.arenas[arena], V = A.modes[mode];
+  const winName = V.winner === 'draw' ? 'DRAW!' : (F[V.winner].short.toUpperCase() + ' WINS!');
+  const stats = Object.keys(F.a.stats);
+  $('verdict').innerHTML = `
+    <div class="verdict-box">
+      <span class="kicker">The verdict · ${A.label} · ${mode === 'character' ? 'In character' : 'Bloodlusted'}</span>
+      <h2 class="winner">${winName}</h2>
+      <div class="verdict-meta"><span class="pill">${V.method}</span><span class="pill">${V.conf}% confident</span><span class="pill">Verdict v2</span></div>
+      <div class="conf" role="img" aria-label="${V.conf}% confident"><i style="width:${V.conf}%"></i></div>
+      <p class="arena-note">${A.note}</p>
+    </div>
+    <div class="tape">
+      <h3>Tale of the tape</h3>
+      <div class="tape-head"><span>${F.a.short}</span><span>${F.b.short}</span></div>
+      ${stats.map(s => `
+        <div class="tape-row">
+          <div class="bar l" role="img" aria-label="${F.a.short} ${s} ${F.a.stats[s]} of 10"><i style="width:${F.a.stats[s] * 10}%"></i></div>
+          <span class="lbl">${s}</span>
+          <div class="bar r" role="img" aria-label="${F.b.short} ${s} ${F.b.stats[s]} of 10"><i style="width:${F.b.stats[s] * 10}%"></i></div>
+        </div>`).join('')}
+    </div>`;
+
+  const beats = A.beats;
+  $('beatCount').textContent = `${beats.length} beats. Closer fights get more panels.`;
+  $('pages').innerHTML = beats.map((b, i) => {
+    const figs = b.who === 'both' ? fig('a', { noAura: true }) + fig('b', { noAura: true }) : fig(b.who);
+    return `<article class="panel" style="animation-delay:${i * 70}ms">
+      <div class="cap"><b>${i + 1}.</b>${b.title}. ${b.text}</div>
+      <div class="scene ${sceneClass[arena]}"><span class="sfx ${i % 2 ? 'right' : 'left'}">${b.sfx}</span>${figs}</div>
+    </article>`;
+  }).join('') + `<article class="panel final" style="animation-delay:${beats.length * 70}ms">
+      <div class="cap"><b>END.</b>${V.method}</div>
+      <div class="final-body"><span class="big">${winName}</span><p>${V.finish}</p></div>
+    </article>`;
+  fixPanelSpans(beats.length + 1);
+}
+
+// Keep the comic grid tidy whatever the number of panels.
+function fixPanelSpans(n) {
+  const wide = matchMedia('(min-width: 861px)').matches;
+  const panels = [...document.querySelectorAll('.panel')];
+  if (!wide) { panels.forEach(p => p.style.gridColumn = ''); return; }
+  const layouts = { 5: [4, 2, 3, 3, 6], 6: [4, 2, 2, 4, 3, 3] };
+  const spans = layouts[n] || panels.map(() => 3);
+  panels.forEach((p, i) => p.style.gridColumn = `span ${spans[i]}`);
+}
+addEventListener('resize', () => fixPanelSpans(document.querySelectorAll('.panel').length));
+
+// Letters page
+const C = DATA.community;
+let myVote = null;
+function renderVotes() {
+  $('agreeN').textContent = (C.agree + (myVote === 'agree' ? 1 : 0)).toLocaleString();
+  $('disagreeN').textContent = (C.disagree + (myVote === 'disagree' ? 1 : 0)).toLocaleString();
+  $('agree').setAttribute('aria-pressed', myVote === 'agree');
+  $('disagree').setAttribute('aria-pressed', myVote === 'disagree');
+}
+$('agree').onclick = () => { myVote = myVote === 'agree' ? null : 'agree'; renderVotes(); };
+$('disagree').onclick = () => { myVote = myVote === 'disagree' ? null : 'disagree'; renderVotes(); $('argText').focus(); };
+function renderArgs() {
+  $('args').innerHTML = C.args.map((a, i) => `
+    <div class="letter">
+      <button class="up" type="button" data-i="${i}" aria-pressed="${!!a.mine}" aria-label="Upvote, ${a.votes} votes">
+        <svg viewBox="0 0 16 16"><path d="M8 2 14 10H2Z" fill="currentColor"/></svg>${a.votes}
+      </button>
+      <div><q>${a.text}</q><br><span class="status">${a.status}</span>
+      ${a.reply ? `<div class="reply"><b>Editor's reply:</b> ${a.reply}</div>` : ''}</div>
+    </div>`).join('');
+}
+$('args').addEventListener('click', (e) => {
+  const b = e.target.closest('.up'); if (!b) return;
+  const a = C.args[b.dataset.i]; a.mine = !a.mine; a.votes += a.mine ? 1 : -1; renderArgs();
+});
+$('addArg').addEventListener('submit', (e) => {
+  e.preventDefault(); const t = $('argText').value.trim(); if (!t) return;
+  C.args.push({ votes: 1, mine: true, status: 'Needs 150 votes for review', text: t, reply: null });
+  $('argText').value = ''; renderArgs(); toast('Your letter is in. It goes to review at 150 votes.');
+});
+$('hist').innerHTML = C.history.map(h => `<div class="hist"><b>${h.v}</b><div>${h.text}<span>${h.date}</span></div></div>`).join('');
+
+renderVotes(); renderArgs(); render();
+</script>
